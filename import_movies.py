@@ -50,6 +50,11 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
         #check for missing rating and set to none
         rating = None
         
+        
+     #lists for directors and actors
+    directors = []
+    cast = []
+        
     #dictionary to represent one MongoDB movie document
     movie_dict = {
         
@@ -58,8 +63,9 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
     "genres": genres,
     "rating": rating,
     #changed blank one line column to description field in mongodb
-    "description": first_movie["ONE-LINE"].strip()
-        
+    "description": first_movie["ONE-LINE"].strip(),
+    "directors": directors,
+    "cast": cast
     }
 
     #display the document
@@ -67,10 +73,6 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
     
     #display og stars info
     stars_names = first_movie["STARS"]
-    
-     #lists for directors and actors
-    directors = []
-    cast = []
 
     #separating the director section from the actors section
     sections = stars_names.split("Stars: ")
