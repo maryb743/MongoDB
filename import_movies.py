@@ -36,6 +36,19 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
 
     #remove whitespace 
     genres = [genre.strip() for genre in genres]
+    
+    #dictionary to represent one MongoDB movie document
+    movie_document = {
+        
+        "title": first_movie["MOVIES"].strip(),
+        "year": first_movie["YEAR"].strip(),
+        "genres": genres,
+        "rating": None
+        
+    }
+
+    #display the document
+    print(movie_document)
 
     #show genres
     print("Og genres:", genre_text)
