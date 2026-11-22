@@ -47,25 +47,60 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
         
     else:
         
-        #missing rating set to none
+        #check for missing rating and set to none
         rating = None
         
     #dictionary to represent one MongoDB movie document
     movie_dict = {
         
-        "title": first_movie["MOVIES"].strip(),
-        "year": first_movie["YEAR"].strip(),
-        "genres": genres,
-        "rating": rating
+    "title": first_movie["MOVIES"].strip(),
+    "year": first_movie["YEAR"].strip(),
+    "genres": genres,
+    "rating": rating,
+    #changed blank one line column to description field in mongodb
+    "description": first_movie["ONE-LINE"].strip()
         
     }
 
     #display the document
     print(movie_dict)
+    
+    #display og stars info
+    stars_names = first_movie["STARS"]
+    
+     #lists for directors and actors
+    directors = []
+    cast = []
 
-    #show genres
-    print("Og genres:", genre_text)
-    print("new genres:", genres)
+    #separating the director section from the actors section
+    sections = stars_names.split("Stars: ")
+
+    #get director names
+    director_names = sections[0].replace("Director: ", "").strip()
+
+    #put directors into a list
+    directors = [name.strip() for name in director_names.split(",") if name.strip()]
+
+    #get the actor names if a Stars section exists
+    if len(sections) > 1:
+        
+        cast_text = sections[1].strip()
+        
+        cast = [name.strip() 
+                #seperate names at commas
+                for name in cast_text.split(",") 
+                #remove white space
+                if name.strip()]
+
+    #display the results
+    print("Directors: ", directors)
+    print("Cast: ", cast)
+    #og stars column with directors and cast together
+    print("Og STARS data: ")
+    print(stars_names)
+
+    print("Og genres: ", genre_text)
+    print("new genres: ", genres)
     
 #close
 client.close()
