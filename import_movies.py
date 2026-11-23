@@ -26,24 +26,24 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
 
     #display first movie in file
     #convert genre to python list to later be embedded array
-    first_movie = next(reader)
+    firstMovie = next(reader)
 
     #get genres
-    genre_text = first_movie["GENRE"]
+    genreText = firstMovie["GENRE"]
 
     #seperate commma-seperated genres into list
-    genres = genre_text.split(",")
+    genres = genreText.split(",")
 
     #remove whitespace 
     genres = [genre.strip() for genre in genres]
     
     #movie rating from the CSV
-    rating_text = first_movie["RATING"].strip()
+    ratingText = firstMovie["RATING"].strip()
 
     #convert the rating to a decimal number
-    if rating_text:
+    if ratingText:
         
-        rating = float(rating_text)
+        rating = float(ratingText)
         
     else:
         
@@ -53,35 +53,84 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
         
      #lists for directors and actors
     directors = []
+    
     cast = []
+    
+    #converting votes into integers and accounting for the fact that theres commas in the numbers in the database
+    votesText = firstMovie["VOTES"].replace(",", "").strip()
+    
+    if votesText:
         
-    #dictionary to represent one MongoDB movie document
-    movie_dict = {
+        votes = int(votesText.replace(",", ""))
         
-    "title": first_movie["MOVIES"].strip(),
-    "year": first_movie["YEAR"].strip(),
+    else:
+        
+        votes = None
+    
+    #convert runtime into minutes
+    runtimeText = firstMovie["RunTime"].replace("min", "").strip()
+
+    if runtimeText:
+        
+        runtime = int(runtimeText)
+        
+    else:
+        
+        runtime = None
+        
+    #convert gross earnings into float 
+    grossText = firstMovie["Gross"].replace("$", "").strip()
+
+    if grossText:
+        
+        if grossText.endswith("M"):
+            
+            #remove the letter and convert into whole number 
+            gross = float(grossText[:-1]) * 1000000
+            
+        elif grossText.endswith("K"):
+            
+             #remove the letter and convert into whole number 
+            gross = float(grossText[:-1]) * 1000
+            
+        else:
+            
+            gross = float(grossText)
+        
+    else:
+        
+        gross = None
+
+    #movie document
+    movieDict = {
+        
+    "title": firstMovie["MOVIES"].strip(),
+    "year": firstMovie["YEAR"].strip(),
     "genres": genres,
     "rating": rating,
     #changed blank one line column to description field in mongodb
-    "description": first_movie["ONE-LINE"].strip(),
+    "description": firstMovie["ONE-LINE"].strip(),
     "directors": directors,
-    "cast": cast
+    "cast": cast,
+    "votes": votes,
+    "runtime": runtime,
+    "gross": gross
     }
 
     #display the document
-    print(movie_dict)
+    print(movieDict)
     
     #display og stars info
-    stars_names = first_movie["STARS"]
+    castNames = firstMovie["STARS"]
 
     #separating the director section from the actors section
-    sections = stars_names.split("Stars: ")
+    sections = castNames.split("Stars: ")
 
     #get director names
-    director_names = sections[0].replace("Director: ", "").strip()
+    directorNames = sections[0].replace("Director: ", "").strip()
 
     #put directors into a list
-    directors = [name.strip() for name in director_names.split(",") if name.strip()]
+    directors = [name.strip() for name in directorNames.split(",") if name.strip()]
 
     #get the actor names if a Stars section exists
     if len(sections) > 1:
@@ -94,15 +143,19 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
                 #remove white space
                 if name.strip()]
 
-    #display the results
+    print(movieDict)
+    
+    ''' #display the results
     print("Directors: ", directors)
     print("Cast: ", cast)
     #og stars column with directors and cast together
     print("Og STARS data: ")
-    print(stars_names)
+    print(castNames)
 
-    print("Og genres: ", genre_text)
-    print("new genres: ", genres)
+    print("Og genres: ", genreText)
+    print("new genres: ", genres) 
+    
+    '''
     
 #close
 client.close()
