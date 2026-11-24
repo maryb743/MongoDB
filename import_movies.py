@@ -16,146 +16,145 @@ client.admin.command("ping")
 #validation
 print("Successfully connected to MongoDB!")
 
-
 import csv
 
-#open movie csv file with read permissions
+#list to store all movie documents
+movieDocuments = []
+
+#open CSV file
 with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
-    #reader object
+
     reader = csv.DictReader(file)
 
-    #display first movie in file
-    #convert genre to python list to later be embedded array
-    firstMovie = next(reader)
+    #loop through every movie
+    for movie in reader:
 
-    #get genres
-    genreText = firstMovie["GENRE"]
+        #convert genres into an array
+        genreText = movie["GENRE"]
 
-    #seperate commma-seperated genres into list
-    genres = genreText.split(",")
+        genres = [
+            genre.strip()
+            for genre in genreText.split(",")
+            if genre.strip()
+        ]
 
-    #remove whitespace 
-    genres = [genre.strip() for genre in genres]
-    
-    #movie rating from the CSV
-    ratingText = firstMovie["RATING"].strip()
+        #convert rating into a float
+        ratingText = movie["RATING"].strip()
 
-    #convert the rating to a decimal number
-    if ratingText:
-        
-        rating = float(ratingText)
-        
-    else:
-        
-        #check for missing rating and set to none
-        rating = None
-        
-        
-     #lists for directors and actors
-    directors = []
-    
-    cast = []
-    
-    #converting votes into integers and accounting for the fact that theres commas in the numbers in the database
-    votesText = firstMovie["VOTES"].replace(",", "").strip()
-    
-    if votesText:
-        
-        votes = int(votesText.replace(",", ""))
-        
-    else:
-        
-        votes = None
-    
-    #convert runtime into minutes
-    runtimeText = firstMovie["RunTime"].replace("min", "").strip()
-
-    if runtimeText:
-        
-        runtime = int(runtimeText)
-        
-    else:
-        
-        runtime = None
-        
-    #convert gross earnings into float 
-    grossText = firstMovie["Gross"].replace("$", "").strip()
-
-    if grossText:
-        
-        if grossText.endswith("M"):
-            
-            #remove the letter and convert into whole number 
-            gross = float(grossText[:-1]) * 1000000
-            
-        elif grossText.endswith("K"):
-            
-             #remove the letter and convert into whole number 
-            gross = float(grossText[:-1]) * 1000
-            
+        if ratingText:
+            rating = float(ratingText)
         else:
+            rating = None
+
+        #separate directors and actors
+        castNames = movie["STARS"]
+
+        directors = []
+        cast = []
+
+        #separate sections at the pipe symbol
+        for section in castNames.split("|"):
+
+            section = section.strip()
+
+            if section.startswith(("Director:", "Directors:")):
+
+                directorNames = section.split(":", 1)[1]
+
+                directors = [
+                    name.strip()
+                    for name in directorNames.split(",")
+                    if name.strip()
+                ]
+
+            elif section.startswith(("Star:", "Stars:")):
+
+                castText = section.split(":", 1)[1]
+
+                cast = [
+                    name.strip()
+                    for name in castText.split(",")
+                    if name.strip()
+                ]
+
+        #convert votes into an integer
+        votesText = movie["VOTES"].replace(",", "").strip()
+
+        if votesText:
+            votes = int(votesText)
+        else:
+            votes = None
+
+        #convert runtime into an integer
+        runtimeText = movie["RunTime"].replace("min", "").strip()
+
+        if runtimeText:
+            runtime = int(runtimeText)
+        else:
+            runtime = None
+
+        #convert gross earnings into a number
+        grossText = movie["Gross"].replace("$", "").replace(",", "").strip()
+
+        if grossText:
+
+            if grossText.endswith("M"):
+                gross = float(grossText[:-1]) * 1000000
+
+            elif grossText.endswith("K"):
+                gross = float(grossText[:-1]) * 1000
+
+            else:
+                gross = float(grossText)
+
+        else:
+            gross = None
+
+        #create movie document
+        movieDict = {
             
-            gross = float(grossText)
-        
+            "title": movie["MOVIES"].strip(),
+            "year": movie["YEAR"].strip(),
+            "genres": genres,
+            "rating": rating,
+            "description": movie["ONE-LINE"].strip(),
+            "directors": directors,
+            "cast": cast,
+            "votes": votes,
+            "runtime": runtime,
+            "gross": gross
+            
+        }
+
+        # add document to the list
+        movieDocuments.append(movieDict)
+
+#display number of movies processed
+print("Movies processed: ", len(movieDocuments))
+
+#display first movie
+if movieDocuments:
+    print(movieDocuments[0])
+
+#debugging statements
+print("Database:", db.name)
+print("Collection:", movies.name)
+print("Movies ready to insert:", len(movieDocuments))
+print("Existing documents:", movies.count_documents({}))
+    
+#import all movies from csv into MongoDB
+if movieDocuments:
+    
+    #prevent duplicate insert (error checking)
+    if movies.count_documents({}) == 0:
+
+        result = movies.insert_many(movieDocuments)
+
+        print("Movies added to database: ", len(result.inserted_ids))
+
     else:
-        
-        gross = None
 
-    #movie document
-    movieDict = {
-        
-    "title": firstMovie["MOVIES"].strip(),
-    "year": firstMovie["YEAR"].strip(),
-    "genres": genres,
-    "rating": rating,
-    #changed blank one line column to description field in mongodb
-    "description": firstMovie["ONE-LINE"].strip(),
-    "directors": directors,
-    "cast": cast,
-    "votes": votes,
-    "runtime": runtime,
-    "gross": gross
-    }
+        print("Movies have already been added no duplicates allowed!!")
 
-    #display the document
-    print(movieDict)
-    
-    #display og stars info
-    castNames = firstMovie["STARS"]
-
-    #separating the director section from the actors section
-    sections = castNames.split("Stars: ")
-
-    #get director names
-    directorNames = sections[0].replace("Director: ", "").strip()
-
-    #put directors into a list
-    directors = [name.strip() for name in directorNames.split(",") if name.strip()]
-
-    #get the actor names if a Stars section exists
-    if len(sections) > 1:
-        
-        cast_text = sections[1].strip()
-        
-        cast = [name.strip() 
-                #seperate names at commas
-                for name in cast_text.split(",") 
-                #remove white space
-                if name.strip()]
-
-    print(movieDict)
-    
-    ''' #display the results
-    print("Directors: ", directors)
-    print("Cast: ", cast)
-    #og stars column with directors and cast together
-    print("Og STARS data: ")
-    print(castNames)
-
-    print("Og genres: ", genreText)
-    print("new genres: ", genres) 
-    
-    '''
-    
-#close
+#close connection
 client.close()
