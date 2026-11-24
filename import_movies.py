@@ -134,7 +134,6 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
 
 #display number of movies processed
 print("Movies processed: ", len(movieDocuments))
-print("Duplicate movies skipped:", duplicateCount)
 
 #display first movie
 if movieDocuments:
