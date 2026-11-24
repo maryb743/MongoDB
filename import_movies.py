@@ -21,6 +21,10 @@ import csv
 #list to store all movie documents
 movieDocuments = []
 
+#track unique movies using title and year and keep count
+#uniqueMovies = set()
+#duplicateCount = 0
+
 #open CSV file
 with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
 
@@ -126,11 +130,11 @@ with open("movies.csv", "r", encoding="utf-8-sig", newline="") as file:
             
         }
 
-        # add document to the list
-        movieDocuments.append(movieDict)
+
 
 #display number of movies processed
 print("Movies processed: ", len(movieDocuments))
+print("Duplicate movies skipped:", duplicateCount)
 
 #display first movie
 if movieDocuments:
